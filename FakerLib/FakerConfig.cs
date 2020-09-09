@@ -20,25 +20,44 @@ namespace FakerLib
             targetDictionary.Add(new Tuple<Type, Func<Type, Type>>(typeof(ChildType), specifiedField), del);
         }
 
-        public bool TryGetDelegate<ParentType, ChildType>(out Func<Object> del, Func<Type, Type> specifiedField = null)
+        public Func<Object> GetDelegate(Type ParentType, Type ChildType, Func<Type, Type> specifiedField = null)
         {
             Dictionary<Tuple<Type, Func<Type, Type>>, Func<Object>> childDictionary;
+            Func<Object> del = null;
 
-            if (configDelegates.TryGetValue(typeof(ParentType), out childDictionary))
+            if (configDelegates.TryGetValue(ParentType, out childDictionary))
             {
-                return childDictionary.TryGetValue(new Tuple<Type, Func<Type, Type>>(typeof(ChildType), specifiedField), out del);
+                if (!childDictionary.TryGetValue(new Tuple<Type, Func<Type, Type>>(ChildType, specifiedField), out del))
+                {
+                    childDictionary.TryGetValue(new Tuple<Type, Func<Type, Type>>(ChildType, null), out del);
+                }
+                return del;
             }
             else
             {
                 if (configDelegates.TryGetValue(typeof(object), out childDictionary))
                 {
-                    return childDictionary.TryGetValue(new Tuple<Type, Func<Type, Type>>(typeof(ChildType), specifiedField), out del);
+                    if (!childDictionary.TryGetValue(new Tuple<Type, Func<Type, Type>>(ChildType, specifiedField), out del))
+                    {
+                        childDictionary.TryGetValue(new Tuple<Type, Func<Type, Type>>(ChildType, null), out del);
+                    }
+                    return del;
                 }
                 else
                 {
                     throw new Exception("Error while trying to receive standart delegate. Config not setup correctly");
                 }
             }
+        }
+
+        private Func<Object> GetDelegateFromParent<ParentType, ChildType>(Func<Type, Type> specifiedField, Dictionary<Tuple<Type, Func<Type, Type>>, Func<Object>> childDictionary)
+        {
+            Func<Object> del = null;
+            if (!childDictionary.TryGetValue(new Tuple<Type, Func<Type, Type>>(typeof(ChildType), specifiedField), out del))
+            {
+                childDictionary.TryGetValue(new Tuple<Type, Func<Type, Type>>(typeof(ChildType), null), out del);
+            }
+            return del;
         }
 
         public FakerConfig()

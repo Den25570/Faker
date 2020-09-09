@@ -1,46 +1,47 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace FakerLib
 {
-    public static class Faker
+    public class Faker
     {
-        public static T Create<T>() where T : new()
+        private FakerConfig config;
+        public T Create<T>() where T : new()
         {
             ItemFactory itemFactory = new ItemFactory();
             T item = itemFactory.CreateItem<T>();
 
-
+            FillFields<T>(item);
 
             return item;
         }
 
-        private static void FillFields<T>(T item)
+        private void FillFields<T>(T item)
         {
             PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-            foreach (PropertyInfo p in properties)
+            foreach (PropertyInfo propertyInfo in properties)
             {
-                // Only work with strings
-                if (p.PropertyType != typeof(string)) { continue; }
-
                 // If not writable then cannot null it; if not readable then cannot check it's value
-                if (!p.CanWrite || !p.CanRead) { continue; }
+                if (!propertyInfo.CanWrite || !propertyInfo.CanRead) { continue; }
 
-                MethodInfo mget = p.GetGetMethod(false);
-                MethodInfo mset = p.GetSetMethod(false);
+                MethodInfo mget = propertyInfo.GetGetMethod(false);
+                MethodInfo mset = propertyInfo.GetSetMethod(false);
 
                 // Get and set methods have to be public
                 if (mget == null) { continue; }
                 if (mset == null) { continue; }
 
-                foreach (T item in list)
-                {
-                    if (string.IsNullOrEmpty((string)p.GetValue(item, null)))
-                    {
-                        p.SetValue(item, replacement, null);
-                    }
-                }
+                var entityType = propertyInfo.DeclaringType;
+                var parameter = Expression.Parameter(entityType, "entity");
+                var property = Expression.Property(parameter, propertyInfo);
+                var funcType = typeof(Func<,>).MakeGenericType(entityType, propertyInfo.PropertyType);
+                var lambda = (Func<Type, Type>)Expression.Lambda(funcType, property, parameter).Compile();
+
+                config.GetDelegate(typeof(T), propertyInfo.PropertyType, lambda);
+
+                propertyInfo.SetValue(item, , null);
             }
     }
 }
