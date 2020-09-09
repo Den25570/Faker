@@ -56,9 +56,9 @@ namespace FakerLib
                 var parameter = Expression.Parameter(entityType, "entity");
                 var property = Expression.Field(parameter, filedInfo);
                 var funcType = typeof(Func<, >).MakeGenericType(entityType, filedInfo.FieldType);
-                var lambda = Expression.Lambda(funcType, property, parameter).Compile();
+                var lambda = Expression.Lambda(funcType, property, parameter);
 
-                var del = config.GetDelegate(typeof(T), filedInfo.FieldType, lambda);
+                var del = config.GetExpressionDelegate(typeof(T), filedInfo.FieldType, filedInfo.Name);
 
                 filedInfo.SetValue(item, del());
             }

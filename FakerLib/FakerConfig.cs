@@ -1,74 +1,86 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace FakerLib
 {
     public class FakerConfig
     {
-        private Dictionary<Type, Dictionary<Tuple<Type, Delegate>, Func<Object>>> configDelegates;
+        private Dictionary<Type, Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>>> configExpressionDelegate;
 
-        public void Add<ParentType, ChildType>(Func<Object> del, Delegate specifiedField = null)
+        public void Add<ParentType, ChildType>(Func<Object> del, Expression<Func<ParentType, ChildType>> specifiedField = null)
         {
-            Dictionary<Tuple<Type, Delegate>, Func<Object>> targetDictionary;
-            if (!configDelegates.TryGetValue(typeof(ParentType), out targetDictionary))
+            Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>> targetDictionary;
+            if (!configExpressionDelegate.TryGetValue(typeof(ParentType), out targetDictionary))
             {
-                targetDictionary = new Dictionary<Tuple<Type, Delegate>, Func<Object>>();
-                configDelegates.Add(typeof(ParentType), targetDictionary);
+                targetDictionary = new Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>>();
+                configExpressionDelegate.Add(typeof(ParentType), targetDictionary);
             }
 
-            targetDictionary.Add(new Tuple<Type, Delegate>(typeof(ChildType), specifiedField), del);
+            targetDictionary.Add(new Tuple<Type, Expression<Func<object, object>>>(typeof(ChildType), ConvertFunction<ParentType, ChildType>(specifiedField)), del);
         }
 
-        public Func<Object> GetDelegate(Type ParentType, Type ChildType, Delegate specifiedField = null)
+        private Expression<Func<object, object>> ConvertFunction<TInput, TOutput>(Expression<Func<TInput, TOutput>> expression)
         {
-            Dictionary<Tuple<Type, Delegate>, Func<Object>> childDictionary;
+            Expression converted = Expression.Convert(expression.Body, typeof(object));
+            ParameterExpression p = Expression.Parameter(typeof(object));
+            var expr = Expression.Lambda<Func<object, object>>(converted, p);
+            return expr;
+        }
+
+        public Func<Object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName)
+        {
+            Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>> childDictionary;
             Func<Object> del = null;
 
-            if (configDelegates.TryGetValue(ParentType, out childDictionary))
+            if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary))
             {
-                if (!childDictionary.TryGetValue(new Tuple<Type, Delegate>(ChildType, specifiedField), out del))
-                {
-                    childDictionary.TryGetValue(new Tuple<Type, Delegate>(ChildType, null), out del);
-                }
-                return del;
+                del = searchForDelegate(ChildType, childDictionary, ChildName);
             }
             else
             {
-                if (configDelegates.TryGetValue(typeof(object), out childDictionary))
+                if (configExpressionDelegate.TryGetValue(typeof(object), out childDictionary))
                 {
-                    if (!childDictionary.TryGetValue(new Tuple<Type, Delegate>(ChildType, specifiedField), out del))
-                    {
-                        childDictionary.TryGetValue(new Tuple<Type, Delegate>(ChildType, null), out del);
-                    }
-                    return del;
+                    del = searchForDelegate(ChildType, childDictionary, ChildName);
                 }
                 else
                 {
-                    throw new Exception("Error while trying to receive standart delegate. Config not setup correctly");
+                    throw new Exception("Error while trying to receive standart Expression<Func<object, object>>. Config not setup correctly");
                 }
-            }
-        }
-
-        private Func<Object> GetDelegateFromParent<ParentType, ChildType>(Delegate specifiedField, Dictionary<Tuple<Type, Delegate>, Func<Object>> childDictionary)
-        {
-            Func<Object> del = null;
-            if (!childDictionary.TryGetValue(new Tuple<Type, Delegate>(typeof(ChildType), specifiedField), out del))
-            {
-                childDictionary.TryGetValue(new Tuple<Type, Delegate>(typeof(ChildType), null), out del);
             }
             return del;
         }
 
+        public Func<Object> searchForDelegate(Type ChildType, Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>> childDictionary, string ChildName)
+        {
+            Func<Object> del = null;
+            foreach (var keyPair in childDictionary.Keys)
+            {
+                if (keyPair.Item1 == ChildType)
+                {
+                    childDictionary.TryGetValue(keyPair, out del);
+
+                    var op = ((UnaryExpression)keyPair.Item2.Body).Operand;
+                    if (((MemberExpression)op).Member.Name == ChildName)
+                    {
+                        break;
+                    }
+                }
+            }
+            return del;
+            
+        }
+
         public FakerConfig()
         {
-            configDelegates = new Dictionary<Type, Dictionary<Tuple<Type, Delegate>, Func<Object>>>();
+            configExpressionDelegate = new Dictionary<Type, Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>>>();
 
-            var defaultConfig = new Dictionary<Tuple<Type, Delegate>, Func<Object>>();
+            var defaultConfig = new Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>>();
 
-            defaultConfig.Add(new Tuple<Type, Delegate>(typeof(int), null), PropertyFactory.GenerateInt);
+            defaultConfig.Add(new Tuple<Type, Expression<Func<object, object>>>(typeof(int), null), PropertyFactory.GenerateInt);
 
-            configDelegates.Add(typeof(object), defaultConfig);
+            configExpressionDelegate.Add(typeof(object), defaultConfig);
         }
     }
 }
