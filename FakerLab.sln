@@ -5,6 +5,11 @@ VisualStudioVersion = 16.0.30225.117
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FakerLib", "FakerLib\FakerLib.csproj", "{23B9E0AC-0806-4D67-9FC6-E2366D3896FF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FakerApp", "FakerApp\FakerApp.csproj", "{8EA6676D-B38D-476A-AC7B-679C051D756B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{23B9E0AC-0806-4D67-9FC6-E2366D3896FF} = {23B9E0AC-0806-4D67-9FC6-E2366D3896FF}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +20,10 @@ Global
 		{23B9E0AC-0806-4D67-9FC6-E2366D3896FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23B9E0AC-0806-4D67-9FC6-E2366D3896FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23B9E0AC-0806-4D67-9FC6-E2366D3896FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EA6676D-B38D-476A-AC7B-679C051D756B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EA6676D-B38D-476A-AC7B-679C051D756B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EA6676D-B38D-476A-AC7B-679C051D756B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EA6676D-B38D-476A-AC7B-679C051D756B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

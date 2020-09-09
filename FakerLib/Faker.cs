@@ -7,6 +7,11 @@ namespace FakerLib
     public class Faker
     {
         private FakerConfig config;
+
+        public Faker(FakerConfig fakerConfig)
+        {
+            this.config = fakerConfig;
+        }
         public T Create<T>() where T : new()
         {
             ItemFactory itemFactory = new ItemFactory();
@@ -20,10 +25,11 @@ namespace FakerLib
         private void FillFields<T>(T item)
         {
             PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            FieldInfo[] fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Instance);
 
             foreach (PropertyInfo propertyInfo in properties)
             {
-                // If not writable then cannot null it; if not readable then cannot check it's value
+           /*     // If not writable then cannot null it; if not readable then cannot check it's value
                 if (!propertyInfo.CanWrite || !propertyInfo.CanRead) { continue; }
 
                 MethodInfo mget = propertyInfo.GetGetMethod(false);
@@ -39,9 +45,23 @@ namespace FakerLib
                 var funcType = typeof(Func<,>).MakeGenericType(entityType, propertyInfo.PropertyType);
                 var lambda = (Func<Type, Type>)Expression.Lambda(funcType, property, parameter).Compile();
 
-                config.GetDelegate(typeof(T), propertyInfo.PropertyType, lambda);
+                var del = config.GetDelegate(typeof(T), propertyInfo.PropertyType, lambda);
 
-                propertyInfo.SetValue(item, , null);
+                propertyInfo.SetValue(item, del(), null);*/
             }
+
+            foreach (FieldInfo filedInfo in fields)
+            {
+                var entityType = filedInfo.DeclaringType;
+                var parameter = Expression.Parameter(entityType, "entity");
+                var property = Expression.Field(parameter, filedInfo);
+                var funcType = typeof(Func<, >).MakeGenericType(entityType, filedInfo.FieldType);
+                var lambda = Expression.Lambda(funcType, property, parameter).Compile();
+
+                var del = config.GetDelegate(typeof(T), filedInfo.FieldType, lambda);
+
+                filedInfo.SetValue(item, del());
+            }
+        }
     }
 }

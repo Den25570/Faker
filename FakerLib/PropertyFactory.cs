@@ -6,13 +6,13 @@ namespace FakerLib
 {
     public static class PropertyFactory
     {
-        public static int GenerateInt()
+        public static object GenerateInt()
         {
             Random rand = new Random();
             return rand.Next();
         }
 
-        public static double GenerateDouble()
+        public static object GenerateDouble()
         {
             Random rand = new Random();
             return rand.NextDouble();
