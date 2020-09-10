@@ -7,31 +7,24 @@ namespace FakerLib
 {
     public class FakerConfig
     {
-        private Dictionary<Type, Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>>> configExpressionDelegate;
+        private Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Object>>> configExpressionDelegate;
 
         public void Add<ParentType, ChildType>(Func<Object> del, Expression<Func<ParentType, ChildType>> specifiedField = null)
         {
-            Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>> targetDictionary;
+            Dictionary<Tuple<Type, string>, Func<Object>> targetDictionary;
             if (!configExpressionDelegate.TryGetValue(typeof(ParentType), out targetDictionary))
             {
-                targetDictionary = new Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>>();
+                targetDictionary = new Dictionary<Tuple<Type, string>, Func<Object>>();
                 configExpressionDelegate.Add(typeof(ParentType), targetDictionary);
             }
 
-            targetDictionary.Add(new Tuple<Type, Expression<Func<object, object>>>(typeof(ChildType), ConvertFunction<ParentType, ChildType>(specifiedField)), del);
-        }
-
-        private Expression<Func<object, object>> ConvertFunction<TInput, TOutput>(Expression<Func<TInput, TOutput>> expression)
-        {
-            Expression converted = Expression.Convert(expression.Body, typeof(object));
-            ParameterExpression p = Expression.Parameter(typeof(object));
-            var expr = Expression.Lambda<Func<object, object>>(converted, p);
-            return expr;
+            string filedName = specifiedField != null ? ((MemberExpression)specifiedField.Body).Member.Name : null;
+            targetDictionary.Add(new Tuple<Type, string>(typeof(ChildType), filedName), del);
         }
 
         public Func<Object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName)
         {
-            Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>> childDictionary;
+            Dictionary<Tuple<Type, string>, Func<Object>> childDictionary;
             Func<Object> del = null;
 
             if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary))
@@ -46,13 +39,13 @@ namespace FakerLib
                 }
                 else
                 {
-                    throw new Exception("Error while trying to receive standart Expression<Func<object, object>>. Config not setup correctly");
+                    throw new Exception("Error while trying to receive standart string. Config not setup correctly");
                 }
             }
             return del;
         }
 
-        public Func<Object> searchForDelegate(Type ChildType, Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>> childDictionary, string ChildName)
+        public Func<Object> searchForDelegate(Type ChildType, Dictionary<Tuple<Type, string>, Func<Object>> childDictionary, string ChildName)
         {
             Func<Object> del = null;
             foreach (var keyPair in childDictionary.Keys)
@@ -61,24 +54,25 @@ namespace FakerLib
                 {
                     childDictionary.TryGetValue(keyPair, out del);
 
-                    var op = ((UnaryExpression)keyPair.Item2.Body).Operand;
-                    if (((MemberExpression)op).Member.Name == ChildName)
+                    if (keyPair.Item2 != null)
                     {
-                        break;
-                    }
+                        if (keyPair.Item2 == ChildName)
+                        {
+                            break;
+                        }
+                    }              
                 }
             }
-            return del;
-            
+            return del;           
         }
 
         public FakerConfig()
         {
-            configExpressionDelegate = new Dictionary<Type, Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>>>();
+            configExpressionDelegate = new Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Object>>>();
 
-            var defaultConfig = new Dictionary<Tuple<Type, Expression<Func<object, object>>>, Func<Object>>();
-
-            defaultConfig.Add(new Tuple<Type, Expression<Func<object, object>>>(typeof(int), null), PropertyFactory.GenerateInt);
+            //Setting up default config
+            var defaultConfig = new Dictionary<Tuple<Type, string>, Func<Object>>();
+            defaultConfig.Add(new Tuple<Type, string>(typeof(int), null), PropertyFactory.GenerateInt);
 
             configExpressionDelegate.Add(typeof(object), defaultConfig);
         }

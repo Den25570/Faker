@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -7,60 +8,62 @@ namespace FakerLib
     public class Faker
     {
         private FakerConfig config;
+        private ItemFactory itemFactory;
 
         public Faker(FakerConfig fakerConfig)
         {
             this.config = fakerConfig;
+            this.itemFactory = new ItemFactory();
         }
-        public T Create<T>() where T : new()
+        public object Create(Type objectType)
         {
-            ItemFactory itemFactory = new ItemFactory();
-            T item = itemFactory.CreateItem<T>();
+            object item = itemFactory.CreateItem(objectType);
 
-            FillFields<T>(item);
+            FillFields(item);
 
             return item;
         }
 
-        private void FillFields<T>(T item)
+        private void FillFields(object item)
         {
-            PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            FieldInfo[] fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo[] properties = item.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            FieldInfo[] fields = item.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
 
             foreach (PropertyInfo propertyInfo in properties)
             {
-           /*     // If not writable then cannot null it; if not readable then cannot check it's value
-                if (!propertyInfo.CanWrite || !propertyInfo.CanRead) { continue; }
+                if ((!propertyInfo.CanWrite || !propertyInfo.CanRead) || (propertyInfo.GetGetMethod(false) == null || propertyInfo.GetSetMethod(false) == null)) 
+                { 
+                    continue; 
+                }
 
-                MethodInfo mget = propertyInfo.GetGetMethod(false);
-                MethodInfo mset = propertyInfo.GetSetMethod(false);
-
-                // Get and set methods have to be public
-                if (mget == null) { continue; }
-                if (mset == null) { continue; }
-
-                var entityType = propertyInfo.DeclaringType;
-                var parameter = Expression.Parameter(entityType, "entity");
-                var property = Expression.Property(parameter, propertyInfo);
-                var funcType = typeof(Func<,>).MakeGenericType(entityType, propertyInfo.PropertyType);
-                var lambda = (Func<Type, Type>)Expression.Lambda(funcType, property, parameter).Compile();
-
-                var del = config.GetDelegate(typeof(T), propertyInfo.PropertyType, lambda);
-
-                propertyInfo.SetValue(item, del(), null);*/
+                object valueToSet;
+                if (propertyInfo.PropertyType.IsClass)
+                {
+                    valueToSet = Create(propertyInfo.PropertyType);
+                }
+                else
+                {
+                    var del = config.GetExpressionDelegate(item.GetType(), propertyInfo.PropertyType, propertyInfo.Name);
+                    valueToSet = del();
+                }
+                            
+                propertyInfo.SetValue(item, valueToSet, null);
             }
 
             foreach (FieldInfo filedInfo in fields)
             {
-                var entityType = filedInfo.DeclaringType;
-                var parameter = Expression.Parameter(entityType, "entity");
-                var property = Expression.Field(parameter, filedInfo);
-                var funcType = typeof(Func<, >).MakeGenericType(entityType, filedInfo.FieldType);
-                var lambda = Expression.Lambda(funcType, property, parameter);
-
-                var del = config.GetExpressionDelegate(typeof(T), filedInfo.FieldType, filedInfo.Name);
-
-                filedInfo.SetValue(item, del());
+                object valueToSet;
+                if (filedInfo.FieldType.IsClass)
+                {
+                    valueToSet = Create(filedInfo.FieldType);
+                }
+                else
+                {
+                    var del = config.GetExpressionDelegate(item.GetType(), filedInfo.FieldType, filedInfo.Name);
+                    valueToSet = del();
+                }
+            
+                filedInfo.SetValue(item, valueToSet);
             }
         }
     }

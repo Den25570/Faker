@@ -14,11 +14,11 @@ namespace FakerApp
         {
             FakerConfig config = new FakerConfig();
 
-            config.Add<Test, int>(TestGen, test => test.testInt);
+          //  config.Add<Test, int>(TestGen, test => test.testInt);
 
             Faker faker = new Faker(config);
 
-            Test test = faker.Create<Test>();
+            Test test = (Test)faker.Create(typeof(Test));
 
             Console.WriteLine(test.testInt);
         }
