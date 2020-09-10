@@ -29,6 +29,8 @@ namespace FakerLib
             PropertyInfo[] properties = item.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
             FieldInfo[] fields = item.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
 
+            Random rand = new Random();
+
             foreach (PropertyInfo propertyInfo in properties)
             {
                 if ((!propertyInfo.CanWrite || !propertyInfo.CanRead) || (propertyInfo.GetGetMethod(false) == null || propertyInfo.GetSetMethod(false) == null)) 
@@ -37,14 +39,14 @@ namespace FakerLib
                 }
 
                 object valueToSet;
-                if (propertyInfo.PropertyType.IsClass)
+                if (propertyInfo.PropertyType.IsClass && !propertyInfo.PropertyType.FullName.StartsWith("System."))
                 {
                     valueToSet = Create(propertyInfo.PropertyType);
                 }
                 else
                 {
                     var del = config.GetExpressionDelegate(item.GetType(), propertyInfo.PropertyType, propertyInfo.Name);
-                    valueToSet = del();
+                    valueToSet = del(rand);
                 }
                             
                 propertyInfo.SetValue(item, valueToSet, null);
@@ -53,14 +55,14 @@ namespace FakerLib
             foreach (FieldInfo filedInfo in fields)
             {
                 object valueToSet;
-                if (filedInfo.FieldType.IsClass)
+                if (filedInfo.FieldType.IsClass && !filedInfo.FieldType.FullName.StartsWith("System."))
                 {
                     valueToSet = Create(filedInfo.FieldType);
                 }
                 else
                 {
                     var del = config.GetExpressionDelegate(item.GetType(), filedInfo.FieldType, filedInfo.Name);
-                    valueToSet = del();
+                    valueToSet = del(rand);
                 }
             
                 filedInfo.SetValue(item, valueToSet);

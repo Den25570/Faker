@@ -14,6 +14,7 @@ namespace FakerLib
         public object CreateItem(Type objectType)
         {
             object instance = Activator.CreateInstance(objectType);
+
             return instance;
         }
     }

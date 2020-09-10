@@ -7,14 +7,14 @@ namespace FakerLib
 {
     public class FakerConfig
     {
-        private Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Object>>> configExpressionDelegate;
+        private Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, object>>> configExpressionDelegate;
 
-        public void Add<ParentType, ChildType>(Func<Object> del, Expression<Func<ParentType, ChildType>> specifiedField = null)
+        public void Add<ParentType, ChildType>(Func<Random, object> del, Expression<Func<ParentType, ChildType>> specifiedField = null)
         {
-            Dictionary<Tuple<Type, string>, Func<Object>> targetDictionary;
+            Dictionary<Tuple<Type, string>, Func<Random, object>> targetDictionary;
             if (!configExpressionDelegate.TryGetValue(typeof(ParentType), out targetDictionary))
             {
-                targetDictionary = new Dictionary<Tuple<Type, string>, Func<Object>>();
+                targetDictionary = new Dictionary<Tuple<Type, string>, Func<Random, object>>();
                 configExpressionDelegate.Add(typeof(ParentType), targetDictionary);
             }
 
@@ -22,10 +22,10 @@ namespace FakerLib
             targetDictionary.Add(new Tuple<Type, string>(typeof(ChildType), filedName), del);
         }
 
-        public Func<Object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName)
+        public Func<Random, object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName)
         {
-            Dictionary<Tuple<Type, string>, Func<Object>> childDictionary;
-            Func<Object> del = null;
+            Dictionary<Tuple<Type, string>, Func<Random, object>> childDictionary;
+            Func<Random, object> del = null;
 
             if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary))
             {
@@ -45,9 +45,9 @@ namespace FakerLib
             return del;
         }
 
-        public Func<Object> searchForDelegate(Type ChildType, Dictionary<Tuple<Type, string>, Func<Object>> childDictionary, string ChildName)
+        public Func<Random, object> searchForDelegate(Type ChildType, Dictionary<Tuple<Type, string>, Func<Random, object>> childDictionary, string ChildName)
         {
-            Func<Object> del = null;
+            Func<Random, object> del = null;
             foreach (var keyPair in childDictionary.Keys)
             {
                 if (keyPair.Item1 == ChildType)
@@ -68,11 +68,20 @@ namespace FakerLib
 
         public FakerConfig()
         {
-            configExpressionDelegate = new Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Object>>>();
+            configExpressionDelegate = new Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, object>>>();
 
             //Setting up default config
-            var defaultConfig = new Dictionary<Tuple<Type, string>, Func<Object>>();
+            var defaultConfig = new Dictionary<Tuple<Type, string>, Func<Random, object>>();
+
             defaultConfig.Add(new Tuple<Type, string>(typeof(int), null), PropertyFactory.GenerateInt);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(double), null), PropertyFactory.GenerateDouble);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(string), null), PropertyFactory.GenerateString);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(char), null), PropertyFactory.GenerateChar);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(float), null), PropertyFactory.GenerateFloat);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(long), null), PropertyFactory.GenerateLong);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(DateTime), null), PropertyFactory.GenerateDate);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(TimeSpan), null), PropertyFactory.GenerateTime);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(Uri), null), PropertyFactory.GenerateURI);
 
             configExpressionDelegate.Add(typeof(object), defaultConfig);
         }
