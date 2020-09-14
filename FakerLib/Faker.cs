@@ -65,10 +65,10 @@ namespace FakerLib
                 }
                 else
                 {
-                    var del = config.GetExpressionDelegate(item.GetType(), propertyInfo.PropertyType, propertyInfo.Name);
-                    valueToSet = del(rand);
+                    var del = config.GetExpressionDelegate(item.GetType(), propertyInfo.PropertyType, propertyInfo.Name);           
+                    valueToSet = del != null ? del(rand) : propertyInfo.PropertyType.GetConstructor(Type.EmptyTypes).Invoke(new object[0]);
                 }
-                            
+                         
                 propertyInfo.SetValue(item, valueToSet, null);
             }
 
@@ -82,7 +82,7 @@ namespace FakerLib
                 else
                 {
                     var del = config.GetExpressionDelegate(item.GetType(), filedInfo.FieldType, filedInfo.Name);
-                    valueToSet = del(rand);
+                    valueToSet = del != null ? del(rand) : filedInfo.FieldType.GetConstructor(Type.EmptyTypes).Invoke(new object[0]);
                 }
             
                 filedInfo.SetValue(item, valueToSet);
