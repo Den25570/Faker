@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace FakerLib
 {
@@ -9,19 +11,37 @@ namespace FakerLib
     {
         private FakerConfig config;
         private ItemFactory itemFactory;
+        private Stack<Type> DTOCallStack;
 
         public Faker(FakerConfig fakerConfig)
         {
             this.config = fakerConfig;
             this.itemFactory = new ItemFactory();
         }
+
         public object Create(Type objectType)
         {
-            object item = itemFactory.CreateItem(objectType);
+            object item = null;
 
-            FillFields(item);
+            if (!IsTypeInStack(objectType))
+            {
+                item = itemFactory.CreateItem(objectType);
+                DTOCallStack.Push(objectType);
+                FillFields(item);
+                DTOCallStack.Pop();
+            }         
 
             return item;
+        }
+
+        private bool IsTypeInStack(Type type)
+        {
+            foreach(Type stackType in DTOCallStack)
+            {
+                if (stackType == type)
+                    return true;
+            }
+            return false;
         }
 
         private void FillFields(object item)
