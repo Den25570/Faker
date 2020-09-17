@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -17,6 +18,7 @@ namespace FakerLib
         {
             this.config = fakerConfig;
             this.itemFactory = new ItemFactory();
+            this.DTOCallStack = new Stack<Type>();
         }
 
         public object Create(Type objectType)
@@ -24,9 +26,9 @@ namespace FakerLib
             object item = null;
 
             if (!IsTypeInStack(objectType))
-            {
-                item = itemFactory.CreateItem(objectType);
+            {             
                 DTOCallStack.Push(objectType);
+                item = CreateItem(objectType);
                 FillFields(item);
                 DTOCallStack.Pop();
             }         
@@ -58,34 +60,60 @@ namespace FakerLib
                     continue; 
                 }
 
-                object valueToSet;
-                if (propertyInfo.PropertyType.IsClass && !propertyInfo.PropertyType.FullName.StartsWith("System."))
-                {
-                    valueToSet = Create(propertyInfo.PropertyType);
-                }
-                else
-                {
-                    var del = config.GetExpressionDelegate(item.GetType(), propertyInfo.PropertyType, propertyInfo.Name);           
-                    valueToSet = del != null ? del(rand) : propertyInfo.PropertyType.GetConstructor(Type.EmptyTypes).Invoke(new object[0]);
-                }
-                         
-                propertyInfo.SetValue(item, valueToSet, null);
+                propertyInfo.SetValue(item, GetValue(propertyInfo.PropertyType, item.GetType(), propertyInfo.Name, rand));
             }
 
-            foreach (FieldInfo filedInfo in fields)
+            foreach (FieldInfo fieledInfo in fields)
             {
-                object valueToSet;
-                if (filedInfo.FieldType.IsClass && !filedInfo.FieldType.FullName.StartsWith("System."))
+                fieledInfo.SetValue(item, GetValue(fieledInfo.FieldType, item.GetType(), fieledInfo.Name, rand));
+            }
+        }
+
+        private object CreateItem(Type objectType)
+        {
+            object instance;
+            ConstructorInfo[] constructorsInfo = objectType.GetConstructors();
+
+            if (constructorsInfo.Length == 0)
+            {
+                instance = Activator.CreateInstance(objectType);
+            }
+            else
+            {
+                Random rand = new Random();
+                ConstructorInfo constructorInfo = constructorsInfo.First();
+                ParameterInfo[] parametersInfo = constructorInfo.GetParameters();
+                Object[] objectParams = new Object[parametersInfo.Length];
+
+                for (int i = 0; i < objectParams.Length; i++)
                 {
-                    valueToSet = Create(filedInfo.FieldType);
+                    objectParams[i] = GetValue(parametersInfo[i].ParameterType, objectType, parametersInfo[i].Name, rand);
                 }
-                else
+
+                try
                 {
-                    var del = config.GetExpressionDelegate(item.GetType(), filedInfo.FieldType, filedInfo.Name);
-                    valueToSet = del != null ? del(rand) : filedInfo.FieldType.GetConstructor(Type.EmptyTypes).Invoke(new object[0]);
+                    instance = constructorInfo.Invoke(objectParams);
                 }
-            
-                filedInfo.SetValue(item, valueToSet);
+                catch (Exception e)
+                {
+                    throw new Exception("Error occured while trying to create object via constructor with parameters");
+                }
+
+            }
+
+            return instance;
+        }
+
+        public object GetValue(Type valueType, Type parentType, string valueName, Random rand)
+        {
+            if (valueType.IsClass && !valueType.FullName.StartsWith("System."))
+            {
+                return Create(valueType);
+            }
+            else
+            {
+                var del = config.GetExpressionDelegate(parentType, valueType, valueName);
+                return del != null ? del(rand) : valueType.GetConstructor(Type.EmptyTypes).Invoke(new object[0]);
             }
         }
     }
