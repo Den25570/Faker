@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace FakerPluginBase
 {
-    public interface IFakerDataBridge
-    {
-        object RequestObject(Type objectType, Type[] genericParams);
+    public interface IUsingBridge
+    {       
+        IFakerDataBridge dataBridge { get; }
+
+        void SetDataBridge(IFakerDataBridge dataBridge);
     }
 }

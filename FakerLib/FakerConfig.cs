@@ -11,6 +11,7 @@ namespace FakerLib
     public class FakerConfig
     {
         private Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, Type[], object>>> configExpressionDelegate;
+        private List<Object> plugins;
 
         public void Add<ParentType, ChildType>(Func<Random, Type[], object> del, Expression<Func<ParentType, ChildType>> specifiedField = null)
         {
@@ -30,50 +31,52 @@ namespace FakerLib
             Dictionary<Tuple<Type, string>, Func<Random, Type[], object>> childDictionary;
             Func<Random, Type[], object> del = null;
 
-            if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary))
-            {
-                del = searchForDelegate(ChildType, childDictionary, ChildName);
-            }
+            if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary) && searchForDelegate(ChildType, childDictionary, ChildName, out del)){}
             else
             {
-                if (configExpressionDelegate.TryGetValue(typeof(object), out childDictionary))
-                {
-                    del = searchForDelegate(ChildType, childDictionary, ChildName);
-                }
+                if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary) && searchForDelegate(ChildType, childDictionary, null, out del)){}
                 else
                 {
-                    throw new Exception("Error while trying to receive standart string. Config not setup correctly");
+                    if (configExpressionDelegate.TryGetValue(typeof(object), out childDictionary) && searchForDelegate(ChildType, childDictionary, null, out del)) {}
+                    else
+                    {
+                        del = null; 
+                    }
                 }
             }
             return del;
         }
 
-        private Func<Random, Type[], object> searchForDelegate(Type ChildType, Dictionary<Tuple<Type, string>, Func<Random, Type[], object>> childDictionary, string ChildName)
+        public void Configure(Faker fakerInstance)
         {
-            Func<Random, Type[], object> del = null;
-            foreach (var keyPair in childDictionary.Keys)
+            foreach(var plugin in plugins)
             {
-                if (keyPair.Item1 == ChildType)
+                if (plugin.GetType().GetInterfaces().Contains(typeof(IUsingBridge)))
                 {
-                    childDictionary.TryGetValue(keyPair, out del);
-
-                    if (keyPair.Item2 != null)
-                    {
-                        if (keyPair.Item2 == ChildName)
-                        {
-                            break;
-                        }
-                    }              
+                    ((IUsingBridge)plugin).SetDataBridge(new PluginDataBridge(fakerInstance));
                 }
             }
-            return del;           
+        }
+
+        private bool searchForDelegate(Type ChildType, Dictionary<Tuple<Type, string>, Func<Random, Type[], object>> childDictionary, string ChildName, out Func<Random, Type[], object> del)
+        {
+            del = null;
+            foreach (var keyPair in childDictionary.Keys)
+            {
+                if (keyPair.Item1 == ChildType && keyPair.Item2 == ChildName)
+                {
+                    childDictionary.TryGetValue(keyPair, out del);
+                    return true;
+                }
+            }
+            return false;
         }
 
         public FakerConfig()
         {
             //Load Plugins
             PluginController pluginController = new PluginController();
-            List<object> plugins = pluginController.LoadPlugins("Plugins");
+            plugins = pluginController.LoadPlugins("Plugins");
 
             configExpressionDelegate = new Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, Type[], object>>>();
 

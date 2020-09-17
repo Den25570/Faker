@@ -49,7 +49,8 @@ namespace FakerLib.Plugin
                 {
                     try
                     {
-                        plugins.Add(asm.CreateInstance(type.FullName));
+                        object instance = asm.CreateInstance(type.FullName);
+                        plugins.Add(instance);
                     }
                     catch (Exception e)
                     {

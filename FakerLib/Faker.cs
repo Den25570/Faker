@@ -19,6 +19,8 @@ namespace FakerLib
             this.config = fakerConfig;
             this.itemFactory = new ItemFactory();
             this.DTOCallStack = new Stack<Type>();
+
+            this.config.Configure(this);
         }
 
         public object Create(Type objectType)
@@ -67,7 +69,7 @@ namespace FakerLib
 
             foreach (FieldInfo fieledInfo in fields)
             {
-                fieledInfo.SetValue(item, GetValue(fieledInfo.FieldType, item.GetType(), fieledInfo.Name, rand);
+                fieledInfo.SetValue(item, GetValue(fieledInfo.FieldType, item.GetType(), fieledInfo.Name, rand));
             }
         }
 
