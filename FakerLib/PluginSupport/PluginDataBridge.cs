@@ -13,9 +13,9 @@ namespace FakerLib.Plugin
             this.fakerInstance = fakerInstance;
         }
 
-        public T RequestObject<T>()
+        public T RequestObject<T>(Type[] genericParams)
         {
-            return (T)fakerInstance.GetValue(typeof(object), typeof(T), null, new Random());
+            return (T)fakerInstance.GetValue(typeof(object), typeof(T), null, new Random(), genericParams);
         }
     }
 }

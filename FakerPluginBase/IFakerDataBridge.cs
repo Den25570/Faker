@@ -8,6 +8,6 @@ namespace FakerPluginBase
 {
     public interface IFakerDataBridge
     {
-        T RequestObject<T>();
+        T RequestObject<T>(Type[] genericParams);
     }
 }
