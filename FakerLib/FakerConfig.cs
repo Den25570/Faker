@@ -1,5 +1,8 @@
-﻿using System;
+﻿using FakerLib.Plugin;
+using FakerPluginBase;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -7,14 +10,14 @@ namespace FakerLib
 {
     public class FakerConfig
     {
-        private Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, object>>> configExpressionDelegate;
+        private Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>>> configExpressionDelegate;
 
-        public void Add<ParentType, ChildType>(Func<Random, object> del, Expression<Func<ParentType, ChildType>> specifiedField = null)
+        public void Add<ParentType, ChildType>(Func<Random, List<Type>, object> del, Expression<Func<ParentType, ChildType>> specifiedField = null)
         {
-            Dictionary<Tuple<Type, string>, Func<Random, object>> targetDictionary;
+            Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>> targetDictionary;
             if (!configExpressionDelegate.TryGetValue(typeof(ParentType), out targetDictionary))
             {
-                targetDictionary = new Dictionary<Tuple<Type, string>, Func<Random, object>>();
+                targetDictionary = new Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>>();
                 configExpressionDelegate.Add(typeof(ParentType), targetDictionary);
             }
 
@@ -22,10 +25,10 @@ namespace FakerLib
             targetDictionary.Add(new Tuple<Type, string>(typeof(ChildType), filedName), del);
         }
 
-        public Func<Random, object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName)
+        public Func<Random, List<Type>, object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName)
         {
-            Dictionary<Tuple<Type, string>, Func<Random, object>> childDictionary;
-            Func<Random, object> del = null;
+            Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>> childDictionary;
+            Func<Random, List<Type>, object> del = null;
 
             if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary))
             {
@@ -45,9 +48,9 @@ namespace FakerLib
             return del;
         }
 
-        public Func<Random, object> searchForDelegate(Type ChildType, Dictionary<Tuple<Type, string>, Func<Random, object>> childDictionary, string ChildName)
+        public Func<Random, List<Type>, object> searchForDelegate(Type ChildType, Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>> childDictionary, string ChildName)
         {
-            Func<Random, object> del = null;
+            Func<Random, List<Type>, object> del = null;
             foreach (var keyPair in childDictionary.Keys)
             {
                 if (keyPair.Item1 == ChildType)
@@ -68,20 +71,35 @@ namespace FakerLib
 
         public FakerConfig()
         {
-            configExpressionDelegate = new Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, object>>>();
+            //Load Plugins
+            PluginController pluginController = new PluginController("Plugins");
+            List<object> plugins = pluginController.LoadPlugins();
+
+            configExpressionDelegate = new Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>>>();
+
+            PropertyFactory propertyFactory = new PropertyFactory();
 
             //Setting up default config
-            var defaultConfig = new Dictionary<Tuple<Type, string>, Func<Random, object>>();
+            var defaultConfig = new Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>>();
 
-            defaultConfig.Add(new Tuple<Type, string>(typeof(int), null), PropertyFactory.GenerateInt);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(double), null), PropertyFactory.GenerateDouble);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(string), null), PropertyFactory.GenerateString);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(char), null), PropertyFactory.GenerateChar);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(float), null), PropertyFactory.GenerateFloat);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(long), null), PropertyFactory.GenerateLong);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(DateTime), null), PropertyFactory.GenerateDate);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(TimeSpan), null), PropertyFactory.GenerateTime);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(Uri), null), PropertyFactory.GenerateURI);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(int), null), propertyFactory.GenerateInt);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(double), null), propertyFactory.GenerateDouble);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(string), null), propertyFactory.GenerateString);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(char), null), propertyFactory.GenerateChar);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(float), null), propertyFactory.GenerateFloat);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(long), null), propertyFactory.GenerateLong);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(DateTime), null), propertyFactory.GenerateDate);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(TimeSpan), null), propertyFactory.GenerateTime);
+            defaultConfig.Add(new Tuple<Type, string>(typeof(Uri), null), propertyFactory.GenerateURI);
+
+            //add plugin methods
+            foreach (var plugin in plugins)
+            {
+                var delegates = pluginController.GetPropertyGenerators(plugin);
+                foreach(var del in delegates) {
+                    defaultConfig.Add(new Tuple<Type, string>(del.Item1, null), del.Item2);
+                }
+            }
 
             configExpressionDelegate.Add(typeof(object), defaultConfig);
         }

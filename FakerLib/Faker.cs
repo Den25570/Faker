@@ -48,6 +48,8 @@ namespace FakerLib
 
         private void FillFields(object item)
         {
+            if (item == null) return;
+
             PropertyInfo[] properties = item.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
             FieldInfo[] fields = item.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
 

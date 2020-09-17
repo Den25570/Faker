@@ -1,21 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FakerLib
 {
-    public static class PropertyFactory
+    public class PropertyFactory
     {
-        public static object GenerateInt(Random rand)
+        public object GenerateInt(Random rand, List<Type> genericTypes)
         {
             return rand.Next();
         }
 
-        public static object GenerateDouble(Random rand)
+        public object GenerateDouble(Random rand, List<Type> genericTypes)
         {
             return rand.NextDouble();
         }
 
-        public static object GenerateString(Random rand)
+        public object GenerateString(Random rand, List<Type> genericTypes)
         {
             int length = rand.Next(1, 20);
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -24,29 +25,29 @@ namespace FakerLib
               .Select(s => s[rand.Next(s.Length)]).ToArray());
         }
 
-        public static object GenerateChar(Random rand)
+        public object GenerateChar(Random rand, List<Type> genericTypes)
         {
             return (char)rand.Next('0', 'Z'); ;
         }
 
-        public static object GenerateFloat(Random rand)
+        public object GenerateFloat(Random rand, List<Type> genericTypes)
         {
             return (float)rand.NextDouble();
         }
 
-        public static object GenerateLong(Random rand)
+        public object GenerateLong(Random rand, List<Type> genericTypes)
         {
             return (long)rand.Next();
         }
 
-        public static object GenerateDate(Random rand)
+        public object GenerateDate(Random rand, List<Type> genericTypes)
         {
             DateTime start = new DateTime(1970, 1, 1);
             int range = (DateTime.Today - start).Days;
             return start.AddDays(rand.Next(range));
         }
 
-        public static object GenerateTime(Random rand)
+        public object GenerateTime(Random rand, List<Type> genericTypes)
         {
             TimeSpan start = TimeSpan.FromHours(0);
             TimeSpan end = TimeSpan.FromHours(24);
@@ -55,11 +56,11 @@ namespace FakerLib
             return start.Add(TimeSpan.FromMinutes(minutes));
         }
 
-        public static object GenerateURI(Random rand)
+        public object GenerateURI(Random rand, List<Type> genericTypes)
         {
             UriBuilder uriBuilder = new UriBuilder();
-            uriBuilder.Host = (string)GenerateString(rand) + "." + (string)GenerateString(rand);
-            uriBuilder.Path = (string)GenerateString(rand);
+            uriBuilder.Host = (string)GenerateString(rand, genericTypes) + "." + (string)GenerateString(rand, genericTypes);
+            uriBuilder.Path = (string)GenerateString(rand, genericTypes);
             return uriBuilder.Uri;
         }
 

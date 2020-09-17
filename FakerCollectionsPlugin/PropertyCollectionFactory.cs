@@ -12,9 +12,10 @@ namespace FakerCollection
     {
         private IFakerDataBridge dataBridge;
 
-        public object GenerateCollection(Type type, Random rand)
+        [FakerMethod(typeof(ICollection<>))]
+        public object GenerateCollection(Random rand, List<Type> genericTypes)
         {
-
+            throw new NotImplementedException();
         }
     }
 }
