@@ -62,7 +62,7 @@ namespace FakerLib
                     continue; 
                 }
 
-                propertyInfo.SetValue(item, GetValue(propertyInfo.PropertyType, item.GetType(), propertyInfo.Name, rand));
+                propertyInfo.SetValue(item, GetValue(propertyInfo.PropertyType, item.GetType(), propertyInfo.Name, rand, propertyInfo.PropertyType.GetGenericArguments()));
             }
 
             foreach (FieldInfo fieledInfo in fields)
@@ -106,7 +106,7 @@ namespace FakerLib
             return instance;
         }
 
-        public object GetValue(Type valueType, Type parentType, string valueName, Random rand)
+        public object GetValue(Type valueType, Type parentType, string valueName, Random rand, Type[] genericParams)
         {
             if (valueType.IsClass && !valueType.FullName.StartsWith("System."))
             {
@@ -115,7 +115,7 @@ namespace FakerLib
             else
             {
                 var del = config.GetExpressionDelegate(parentType, valueType, valueName);
-                return del != null ? del(rand) : valueType.GetConstructor(Type.EmptyTypes).Invoke(new object[0]);
+                return del != null ? del(rand, genericParams) : valueType.GetConstructor(Type.EmptyTypes).Invoke(new object[0]);
             }
         }
     }

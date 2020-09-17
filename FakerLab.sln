@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTest", "UnitTest\UnitTe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FakerPluginBase", "FakerPluginBase\FakerPluginBase.csproj", "{B02ED17D-EA69-42AB-9D37-7797C7B00EF4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FakerCollectionsPlugin", "FakerCollectionsPlugin\FakerCollectionsPlugin.csproj", "{324126AA-79C5-4604-9C9A-21BD8FF39C94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{B02ED17D-EA69-42AB-9D37-7797C7B00EF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B02ED17D-EA69-42AB-9D37-7797C7B00EF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B02ED17D-EA69-42AB-9D37-7797C7B00EF4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{324126AA-79C5-4604-9C9A-21BD8FF39C94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{324126AA-79C5-4604-9C9A-21BD8FF39C94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{324126AA-79C5-4604-9C9A-21BD8FF39C94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{324126AA-79C5-4604-9C9A-21BD8FF39C94}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -13,7 +13,7 @@ namespace FakerCollection
         private IFakerDataBridge dataBridge;
 
         [FakerMethod(typeof(ICollection<>))]
-        public object GenerateCollection(Random rand, List<Type> genericTypes)
+        public object GenerateCollection(Random rand, Type[] genericTypes)
         {
             throw new NotImplementedException();
         }

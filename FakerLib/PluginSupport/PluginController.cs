@@ -11,14 +11,7 @@ namespace FakerLib.Plugin
 {
     public class PluginController
     {
-        private string pluginsPath = "Plugins";
-
-        public PluginController(string pluginsPath)
-        {
-            this.pluginsPath = pluginsPath;
-        }
-
-        public List<object> LoadPlugins()
+        public List<object> LoadPlugins(string pluginsPath)
         {
             var plugins = new List<object>();
             string[] pluginFiles;

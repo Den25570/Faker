@@ -10,14 +10,14 @@ namespace FakerLib
 {
     public class FakerConfig
     {
-        private Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>>> configExpressionDelegate;
+        private Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, Type[], object>>> configExpressionDelegate;
 
-        public void Add<ParentType, ChildType>(Func<Random, List<Type>, object> del, Expression<Func<ParentType, ChildType>> specifiedField = null)
+        public void Add<ParentType, ChildType>(Func<Random, Type[], object> del, Expression<Func<ParentType, ChildType>> specifiedField = null)
         {
-            Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>> targetDictionary;
+            Dictionary<Tuple<Type, string>, Func<Random, Type[], object>> targetDictionary;
             if (!configExpressionDelegate.TryGetValue(typeof(ParentType), out targetDictionary))
             {
-                targetDictionary = new Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>>();
+                targetDictionary = new Dictionary<Tuple<Type, string>, Func<Random, Type[], object>>();
                 configExpressionDelegate.Add(typeof(ParentType), targetDictionary);
             }
 
@@ -25,10 +25,10 @@ namespace FakerLib
             targetDictionary.Add(new Tuple<Type, string>(typeof(ChildType), filedName), del);
         }
 
-        public Func<Random, List<Type>, object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName)
+        public Func<Random, Type[], object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName)
         {
-            Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>> childDictionary;
-            Func<Random, List<Type>, object> del = null;
+            Dictionary<Tuple<Type, string>, Func<Random, Type[], object>> childDictionary;
+            Func<Random, Type[], object> del = null;
 
             if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary))
             {
@@ -48,9 +48,9 @@ namespace FakerLib
             return del;
         }
 
-        public Func<Random, List<Type>, object> searchForDelegate(Type ChildType, Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>> childDictionary, string ChildName)
+        private Func<Random, Type[], object> searchForDelegate(Type ChildType, Dictionary<Tuple<Type, string>, Func<Random, Type[], object>> childDictionary, string ChildName)
         {
-            Func<Random, List<Type>, object> del = null;
+            Func<Random, Type[], object> del = null;
             foreach (var keyPair in childDictionary.Keys)
             {
                 if (keyPair.Item1 == ChildType)
@@ -72,16 +72,14 @@ namespace FakerLib
         public FakerConfig()
         {
             //Load Plugins
-            PluginController pluginController = new PluginController("Plugins");
-            List<object> plugins = pluginController.LoadPlugins();
+            PluginController pluginController = new PluginController();
+            List<object> plugins = pluginController.LoadPlugins("Plugins");
 
-            configExpressionDelegate = new Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>>>();
-
-            PropertyFactory propertyFactory = new PropertyFactory();
+            configExpressionDelegate = new Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, Type[], object>>>();
 
             //Setting up default config
-            var defaultConfig = new Dictionary<Tuple<Type, string>, Func<Random, List<Type>, object>>();
-
+            var defaultConfig = new Dictionary<Tuple<Type, string>, Func<Random, Type[], object>>();
+            PropertyFactory propertyFactory = new PropertyFactory();
             defaultConfig.Add(new Tuple<Type, string>(typeof(int), null), propertyFactory.GenerateInt);
             defaultConfig.Add(new Tuple<Type, string>(typeof(double), null), propertyFactory.GenerateDouble);
             defaultConfig.Add(new Tuple<Type, string>(typeof(string), null), propertyFactory.GenerateString);
