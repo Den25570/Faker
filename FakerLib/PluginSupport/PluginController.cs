@@ -11,9 +11,9 @@ namespace FakerLib.Plugin
 {
     public class PluginController
     {
-        public List<object> LoadPlugins(string pluginsPath)
+        public List<IFakerClass> LoadPlugins(string pluginsPath)
         {
-            var plugins = new List<object>();
+            var plugins = new List<IFakerClass>();
             string[] pluginFiles;
             try
             {
@@ -49,7 +49,7 @@ namespace FakerLib.Plugin
                 {
                     try
                     {
-                        object instance = asm.CreateInstance(type.FullName);
+                        IFakerClass instance = (IFakerClass)asm.CreateInstance(type.FullName);
                         plugins.Add(instance);
                     }
                     catch (Exception e)
@@ -62,23 +62,20 @@ namespace FakerLib.Plugin
             return plugins;
         }
 
-        public List<Tuple<Type, Func<Random, Type[], object>>> GetPropertyGenerators(object plugin)
+        public List<Tuple<Type, Func<Type[], object>>> GetPropertyGenerators(object plugin)
         {
             IEnumerable<MethodInfo> methodsInfo = plugin.GetType().GetMethods()
                 .Where(t => t.IsPublic)
                 .Where(t => t.GetCustomAttributes(typeof(FakerMethod), true).Length > 0);
 
-            var input1 = Expression.Parameter(typeof(Random), "input1");
-            var input2 = Expression.Parameter(typeof(List<object>), "input2");
-
-            List<Tuple<Type, Func<Random, Type[], object>>> propertyGenerators = new List<Tuple<Type, Func<Random, Type[], object>>>();
+            List<Tuple<Type, Func<Type[], object>>> propertyGenerators = new List<Tuple<Type, Func<Type[], object>>>();
             foreach (var method in methodsInfo)
             {
                 Type returnType = ((FakerMethod)method.GetCustomAttribute(typeof(FakerMethod), true)).ReturnType;
-                Func<Random, Type[], object> result = (Func<Random, Type[], object>)
-                    Delegate.CreateDelegate(typeof(Func<Random, Type[], object>), plugin, method);
+                Func<Type[], object> result = (Func<Type[], object>)
+                    Delegate.CreateDelegate(typeof(Func<Type[], object>), plugin, method);
 
-                propertyGenerators.Add(new Tuple<Type, Func<Random, Type[], object>>(returnType, result));
+                propertyGenerators.Add(new Tuple<Type, Func<Type[], object>>(returnType, result));
             }
             return propertyGenerators;
         }

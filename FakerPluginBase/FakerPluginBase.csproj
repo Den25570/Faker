@@ -44,7 +44,7 @@
     <Compile Include="Attributes\FakerClass.cs" />
     <Compile Include="IFakerDataBridge.cs" />
     <Compile Include="Attributes\FakerMethod.cs" />
-    <Compile Include="IUsingBridge.cs" />
+    <Compile Include="IFakerClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

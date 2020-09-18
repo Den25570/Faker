@@ -11,13 +11,11 @@ namespace FakerLib
     public class Faker
     {
         private FakerConfig config;
-        private ItemFactory itemFactory;
         private Stack<Type> DTOCallStack;
 
         public Faker(FakerConfig fakerConfig)
         {
             this.config = fakerConfig;
-            this.itemFactory = new ItemFactory();
             this.DTOCallStack = new Stack<Type>();
 
             this.config.Configure(this);
@@ -110,15 +108,46 @@ namespace FakerLib
 
         public object GetValue(Type valueType, Type parentType, string valueName, Random rand)
         {
+            object item;
             if (valueType.IsClass && !valueType.FullName.StartsWith("System."))
             {
-                return Create(valueType);
+                item = Create(valueType);
             }
             else
             {
                 var del = config.GetExpressionDelegate(parentType, valueType, valueName);
-                return del != null ? del(rand, valueType.GetGenericArguments()) : valueType.GetConstructor(Type.EmptyTypes).Invoke(new object[0]);
+
+                if (del != null)
+                {
+                    item = del(getGenericArgs(valueType));
+                }
+                else
+                {
+                    try
+                    {
+                        item = Activator.CreateInstance(valueType);
+                    }
+                    catch
+                    {
+                        item = null;
+                    }                   
+                }
             }
+            return item;
+        }
+
+        private Type[] getGenericArgs(Type type)
+        {
+            Type[] args;
+            if (type.IsArray)
+            {
+                args = new Type[] { type.GetElementType() };
+            }
+            else
+            {
+                args = type.GetGenericArguments();
+            }
+            return args;
         }
     }
 }

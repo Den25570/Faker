@@ -10,26 +10,26 @@ namespace FakerLib
 {
     public class FakerConfig
     {
-        private Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, Type[], object>>> configExpressionDelegate;
-        private List<Object> plugins;
+        private Dictionary<Type, List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>>> configExpressionDelegate;
+        private List<IFakerClass> plugins;
 
-        public void Add<ParentType, ChildType>(Func<Random, Type[], object> del, Expression<Func<ParentType, ChildType>> specifiedField = null)
+        public void Add<ParentType, ChildType>(Func<Type[], object> del, Expression<Func<ParentType, ChildType>> specifiedField = null)
         {
-            Dictionary<Tuple<Type, string>, Func<Random, Type[], object>> targetDictionary;
-            if (!configExpressionDelegate.TryGetValue(typeof(ParentType), out targetDictionary))
+            List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>> targetDataList;
+            if (!configExpressionDelegate.TryGetValue(typeof(ParentType), out targetDataList))
             {
-                targetDictionary = new Dictionary<Tuple<Type, string>, Func<Random, Type[], object>>();
-                configExpressionDelegate.Add(typeof(ParentType), targetDictionary);
+                targetDataList = new List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>>();
+                configExpressionDelegate.Add(typeof(ParentType), targetDataList);
             }
 
             string filedName = specifiedField != null ? ((MemberExpression)specifiedField.Body).Member.Name : null;
-            targetDictionary.Add(new Tuple<Type, string>(typeof(ChildType), filedName), del);
+            targetDataList.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(ChildType), filedName, del, null));
         }
 
-        public Func<Random, Type[], object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName)
+        public Func<Type[], object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName)
         {
-            Dictionary<Tuple<Type, string>, Func<Random, Type[], object>> childDictionary;
-            Func<Random, Type[], object> del = null;
+            List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>> childDictionary;
+            Func<Type[], object> del = null;
 
             if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary) && searchForDelegate(ChildType, childDictionary, ChildName, out del)){}
             else
@@ -51,21 +51,21 @@ namespace FakerLib
         {
             foreach(var plugin in plugins)
             {
-                if (plugin.GetType().GetInterfaces().Contains(typeof(IUsingBridge)))
+                if (plugin.GetType().GetInterfaces().Contains(typeof(IFakerClass)))
                 {
-                    ((IUsingBridge)plugin).SetDataBridge(new PluginDataBridge(fakerInstance));
+                    ((IFakerClass)plugin).SetDataBridge(new PluginDataBridge(fakerInstance));
                 }
             }
         }
 
-        private bool searchForDelegate(Type ChildType, Dictionary<Tuple<Type, string>, Func<Random, Type[], object>> childDictionary, string ChildName, out Func<Random, Type[], object> del)
+        private bool searchForDelegate(Type ChildType, List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>> childDataList, string ChildName, out Func<Type[], object> del)
         {
             del = null;
-            foreach (var keyPair in childDictionary.Keys)
+            foreach (var delData in childDataList)
             {
-                if (keyPair.Item1 == ChildType && keyPair.Item2 == ChildName)
+                if ((delData.Item4 == null ? (delData.Item1.Name == ChildType.Name) : delData.Item4.Invoke(ChildType)) && (delData.Item2 == ChildName))
                 {
-                    childDictionary.TryGetValue(keyPair, out del);
+                    del = delData.Item3;
                     return true;
                 }
             }
@@ -78,27 +78,29 @@ namespace FakerLib
             PluginController pluginController = new PluginController();
             plugins = pluginController.LoadPlugins("Plugins");
 
-            configExpressionDelegate = new Dictionary<Type, Dictionary<Tuple<Type, string>, Func<Random, Type[], object>>>();
+            configExpressionDelegate = new Dictionary<Type, List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>>>();
 
             //Setting up default config
-            var defaultConfig = new Dictionary<Tuple<Type, string>, Func<Random, Type[], object>>();
+            var defaultConfig = new List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>>();
             PropertyFactory propertyFactory = new PropertyFactory();
-            defaultConfig.Add(new Tuple<Type, string>(typeof(int), null), propertyFactory.GenerateInt);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(double), null), propertyFactory.GenerateDouble);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(string), null), propertyFactory.GenerateString);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(char), null), propertyFactory.GenerateChar);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(float), null), propertyFactory.GenerateFloat);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(long), null), propertyFactory.GenerateLong);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(DateTime), null), propertyFactory.GenerateDate);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(TimeSpan), null), propertyFactory.GenerateTime);
-            defaultConfig.Add(new Tuple<Type, string>(typeof(Uri), null), propertyFactory.GenerateURI);
+            defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(int), null, propertyFactory.GenerateInt, null));
+            defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(double), null, propertyFactory.GenerateDouble, null));
+            defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(string), null, propertyFactory.GenerateString, null));
+            defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(char), null, propertyFactory.GenerateChar, null));
+            defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(float), null, propertyFactory.GenerateFloat, null));
+            defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(long), null, propertyFactory.GenerateLong, null));
+            defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(DateTime), null, propertyFactory.GenerateDate, null));
+            defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(TimeSpan), null, propertyFactory.GenerateTime, null));
+            defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(Uri), null, propertyFactory.GenerateURI, null));
 
             //add plugin methods
             foreach (var plugin in plugins)
             {
                 var delegates = pluginController.GetPropertyGenerators(plugin);
                 foreach(var del in delegates) {
-                    defaultConfig.Add(new Tuple<Type, string>(del.Item1, null), del.Item2);
+                    Func<Type, bool> specComparator = null;
+                    plugin.customTypeComparator.TryGetValue(del.Item2.Method.Name, out specComparator);
+                    defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(del.Item1, null, del.Item2, specComparator));
                 }
             }
 

@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace FakerPluginBase
 {
-    public interface IUsingBridge
+    public interface IFakerClass
     {       
         IFakerDataBridge dataBridge { get; }
+
+        Dictionary<string, Func<Type, bool>> customTypeComparator { get; }
 
         void SetDataBridge(IFakerDataBridge dataBridge);
     }
