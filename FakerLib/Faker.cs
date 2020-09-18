@@ -11,12 +11,12 @@ namespace FakerLib
     public class Faker
     {
         private FakerConfig config;
-        private Stack<Type> DTOCallStack;
+        private Stack<object> DTOCallStack;
 
         public Faker(FakerConfig fakerConfig)
         {
             this.config = fakerConfig;
-            this.DTOCallStack = new Stack<Type>();
+            this.DTOCallStack = new Stack<object>();
 
             this.config.Configure(this);
         }
@@ -25,24 +25,29 @@ namespace FakerLib
         {
             object item = null;
 
-            if (!IsTypeInStack(objectType))
-            {             
-                DTOCallStack.Push(objectType);
+            if (!TryGetObjectInStack(objectType, out item))
+            {                           
                 item = CreateItem(objectType);
+                DTOCallStack.Push(item);
                 FillFields(item);
                 DTOCallStack.Pop();
-            }         
+            }  
 
             return item;
         }
 
-        private bool IsTypeInStack(Type type)
+        private bool TryGetObjectInStack(Type type, out object item)
         {
-            foreach(Type stackType in DTOCallStack)
+            foreach(object obj in DTOCallStack)
             {
-                if (stackType == type)
+                if (obj.GetType() == type)
+                {
+                    item = obj;
                     return true;
+                }
+                    
             }
+            item = null;
             return false;
         }
 

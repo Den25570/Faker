@@ -90,9 +90,10 @@ namespace UnitTest
             Assert.AreNotEqual(testClass.TestLong, 0);
 
             Assert.IsNotNull(testClass.TestString);
+            Assert.IsNotNull(testClass.TestUri);
+
             Assert.IsNotNull(testClass.TestDateTime);
             Assert.IsNotNull(testClass.TestSpan);
-            Assert.IsNotNull(testClass.TestUri);
 
             Assert.IsNotNull(testClass.TestObject);
         }
@@ -124,7 +125,9 @@ namespace UnitTest
 
             Assert.AreNotEqual(testClass.testRecursiveClass.TestInt, 0);
 
-            Assert.IsNull(testClass.testRecursiveClass.testRecursiveClass);
+            Assert.NotNull(testClass.testRecursiveClass.testRecursiveClass);
+
+            Assert.AreEqual(testClass.testRecursiveClass.testRecursiveClass, testClass);
 
         }
 

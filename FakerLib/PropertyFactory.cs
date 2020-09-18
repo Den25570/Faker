@@ -43,22 +43,6 @@ namespace FakerLib
             return (long)rand.Next();
         }
 
-        public object GenerateDate(Type[] genericTypes)
-        {
-            DateTime start = new DateTime(1970, 1, 1);
-            int range = (DateTime.Today - start).Days;
-            return start.AddDays(rand.Next(range));
-        }
-
-        public object GenerateTime(Type[] genericTypes)
-        {
-            TimeSpan start = TimeSpan.FromHours(0);
-            TimeSpan end = TimeSpan.FromHours(24);
-            int maxMinutes = (int)((end - start).TotalMinutes);
-            int minutes = rand.Next(maxMinutes);
-            return start.Add(TimeSpan.FromMinutes(minutes));
-        }
-
         public object GenerateURI(Type[] genericTypes)
         {
             UriBuilder uriBuilder = new UriBuilder();

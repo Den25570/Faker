@@ -92,8 +92,6 @@ namespace FakerLib
             defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(char), null, propertyFactory.GenerateChar, null));
             defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(float), null, propertyFactory.GenerateFloat, null));
             defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(long), null, propertyFactory.GenerateLong, null));
-            defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(DateTime), null, propertyFactory.GenerateDate, null));
-            defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(TimeSpan), null, propertyFactory.GenerateTime, null));
             defaultConfig.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(Uri), null, propertyFactory.GenerateURI, null));
 
             //add plugin methods
