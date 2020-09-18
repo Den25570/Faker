@@ -151,6 +151,18 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TestCustomFakerInConstructor()
+        {
+            FakerConfig config = new FakerConfig();
+            config.Add<TestClosedClass, Int32>(CustomIntGenerator, obj => obj.TestInt);
+            Faker faker = new Faker(config);
+
+            TestClosedClass testClass = (TestClosedClass)faker.Create(typeof(TestClosedClass));
+
+            Assert.AreEqual(testClass.TestInt, -1);
+        }
+
+        [TestMethod]
         public void TestPluginListGen()
         {
             TestOpenClass3 testClass = FillClass<TestOpenClass3>();

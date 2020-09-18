@@ -62,12 +62,12 @@ namespace FakerLib
                     continue; 
                 }
 
-                propertyInfo.SetValue(item, GetValue(propertyInfo.PropertyType, item.GetType(), propertyInfo.Name, rand));
+                propertyInfo.SetValue(item, GetValue(propertyInfo.PropertyType, item.GetType(), propertyInfo.Name));
             }
 
             foreach (FieldInfo fieledInfo in fields)
             {
-                fieledInfo.SetValue(item, GetValue(fieledInfo.FieldType, item.GetType(), fieledInfo.Name, rand));
+                fieledInfo.SetValue(item, GetValue(fieledInfo.FieldType, item.GetType(), fieledInfo.Name));
             }
         }
 
@@ -82,14 +82,13 @@ namespace FakerLib
             }
             else
             {
-                Random rand = new Random();
                 ConstructorInfo constructorInfo = constructorsInfo.First();
                 ParameterInfo[] parametersInfo = constructorInfo.GetParameters();
                 Object[] objectParams = new Object[parametersInfo.Length];
 
                 for (int i = 0; i < objectParams.Length; i++)
                 {
-                    objectParams[i] = GetValue(parametersInfo[i].ParameterType, objectType, parametersInfo[i].Name, rand);
+                    objectParams[i] = GetValue(parametersInfo[i].ParameterType, objectType, parametersInfo[i].Name, false);
                 }
 
                 try
@@ -106,7 +105,7 @@ namespace FakerLib
             return instance;
         }
 
-        public object GetValue(Type valueType, Type parentType, string valueName, Random rand)
+        public object GetValue(Type valueType, Type parentType, string valueName, bool caseSensetive = true)
         {
             object item;
             if (valueType.IsClass && !valueType.FullName.StartsWith("System."))
@@ -115,7 +114,7 @@ namespace FakerLib
             }
             else
             {
-                var del = config.GetExpressionDelegate(parentType, valueType, valueName);
+                var del = config.GetExpressionDelegate(parentType, valueType, valueName, caseSensetive);
 
                 if (del != null)
                 {

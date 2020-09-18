@@ -26,18 +26,18 @@ namespace FakerLib
             targetDataList.Add(new Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>(typeof(ChildType), filedName, del, null));
         }
 
-        public Func<Type[], object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName)
+        public Func<Type[], object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName, bool caseSensetive = true)
         {
             List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>> childDictionary;
             Func<Type[], object> del = null;
 
-            if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary) && searchForDelegate(ChildType, childDictionary, ChildName, out del)){}
+            if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary) && searchForDelegate(ChildType, childDictionary, ChildName, out del, caseSensetive)){}
             else
             {
-                if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary) && searchForDelegate(ChildType, childDictionary, null, out del)){}
+                if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary) && searchForDelegate(ChildType, childDictionary, null, out del, caseSensetive)){}
                 else
                 {
-                    if (configExpressionDelegate.TryGetValue(typeof(object), out childDictionary) && searchForDelegate(ChildType, childDictionary, null, out del)) {}
+                    if (configExpressionDelegate.TryGetValue(typeof(object), out childDictionary) && searchForDelegate(ChildType, childDictionary, null, out del, caseSensetive)) {}
                     else
                     {
                         del = null; 
@@ -58,12 +58,15 @@ namespace FakerLib
             }
         }
 
-        private bool searchForDelegate(Type ChildType, List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>> childDataList, string ChildName, out Func<Type[], object> del)
+        private bool searchForDelegate(Type ChildType, List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>> childDataList, string ChildName, out Func<Type[], object> del, bool caseSensetive = true)
         {
             del = null;
             foreach (var delData in childDataList)
             {
-                if ((delData.Item4 == null ? (delData.Item1.Name == ChildType.Name) : delData.Item4.Invoke(ChildType)) && (delData.Item2 == ChildName))
+                string name1 = caseSensetive ? delData.Item2 : delData.Item2 != null ? delData.Item2.ToLower() : null;
+                string name2 = caseSensetive ? ChildName : ChildName != null ? ChildName.ToLower() : null;
+
+                if ((delData.Item4 == null ? (delData.Item1.Name == ChildType.Name) : delData.Item4.Invoke(ChildType)) && (name1 == name2))
                 {
                     del = delData.Item3;
                     return true;

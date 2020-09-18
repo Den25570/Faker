@@ -15,7 +15,7 @@ namespace FakerLib.Plugin
 
         public object RequestObject(Type objectType, Type[] genericParams)
         {
-            dynamic item = fakerInstance.GetValue(objectType, typeof(object), null, new Random());
+            dynamic item = fakerInstance.GetValue(objectType, typeof(object), null);
             return item;
         }
     }
