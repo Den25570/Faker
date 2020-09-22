@@ -22,7 +22,6 @@ namespace UnitTest
             public DateTime TestDateTime;
             public TimeSpan TestSpan;
             public Uri TestUri;
-
             public object TestObject;
         }
 
@@ -83,7 +82,7 @@ namespace UnitTest
         public void TestFieldsFullfill()
         {
             TestOpenClass testClass = FillClass<TestOpenClass>();
-
+ 
             Assert.AreNotEqual(testClass.TestInt, 0);
             Assert.AreNotEqual(testClass.TestDouble, 0);
             Assert.AreNotEqual(testClass.TestFloat, 0);

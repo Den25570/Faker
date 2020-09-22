@@ -4,8 +4,19 @@ using System.Text;
 
 namespace FakerApp
 {
-    public class Test
+    class A
     {
-        public int testInt;
+        public virtual void Foo()
+        {
+            Console.Write("a");
+        }
+    }
+
+    class B : A
+    {
+        public new void Foo()
+        {
+            Console.Write("b");
+        }
     }
 }
