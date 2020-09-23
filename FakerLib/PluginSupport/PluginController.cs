@@ -34,9 +34,6 @@ namespace FakerLib.Plugin
                 try
                 {
                     asm = Assembly.LoadFrom(file);
-                    var targetFrameworkAttribute = Assembly.GetExecutingAssembly()
-                               .GetCustomAttributes(typeof(System.Runtime.Versioning.TargetFrameworkAttribute), false)
-                               .SingleOrDefault();
                     types = asm.GetTypes().
                                Where(t => t.GetCustomAttributes(typeof(FakerClass), true).Length > 0);
                 }

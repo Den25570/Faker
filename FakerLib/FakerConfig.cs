@@ -11,7 +11,9 @@ namespace FakerLib
     public class FakerConfig
     {
         private Dictionary<Type, List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>>> configExpressionDelegate;
-        private List<IFakerClass> plugins;
+
+        private static PluginController pluginController;
+        private static List<IFakerClass> plugins;
 
         public void Add<ParentType, ChildType>(Func<Type[], object> del, Expression<Func<ParentType, ChildType>> specifiedField = null)
         {
@@ -75,12 +77,15 @@ namespace FakerLib
             return false;
         }
 
-        public FakerConfig()
+        static FakerConfig()
         {
             //Load Plugins
-            PluginController pluginController = new PluginController();
-            plugins = pluginController.LoadPlugins("Plugins");
+            pluginController = new PluginController();
+            plugins = pluginController.LoadPlugins("Plugins");            
+        }
 
+        public FakerConfig()
+        {
             configExpressionDelegate = new Dictionary<Type, List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>>>();
 
             //Setting up default config

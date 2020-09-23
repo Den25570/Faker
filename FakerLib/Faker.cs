@@ -27,7 +27,7 @@ namespace FakerLib
 
             if (!TryGetObjectInStack(objectType, out item))
             {                           
-                item = CreateItem(objectType);
+                item = CreateItem(objectType);         
                 DTOCallStack.Push(item);
                 FillFields(item);
                 DTOCallStack.Pop();
@@ -83,7 +83,7 @@ namespace FakerLib
 
             if (constructorsInfo.Length == 0)
             {
-                instance = Activator.CreateInstance(objectType);
+                instance = null;
             }
             else
             {
@@ -100,27 +100,32 @@ namespace FakerLib
                 {
                     instance = constructorInfo.Invoke(objectParams);
                 }
-                catch (Exception e)
+                catch
                 {
                     throw new Exception("Error occured while trying to create object via constructor with parameters");
                 }
-
             }
-
             return instance;
         }
 
         public object GetValue(Type valueType, Type parentType, string valueName, bool caseSensetive = true)
         {
             object item;
+            var del = config.GetExpressionDelegate(parentType, valueType, valueName, caseSensetive);
+
             if (valueType.IsClass && !valueType.FullName.StartsWith("System."))
             {
-                item = Create(valueType);
+                if (del != null)
+                {
+                    item = del(getGenericArgs(valueType));
+                }
+                else
+                {
+                    item = Create(valueType);
+                }               
             }
             else
-            {
-                var del = config.GetExpressionDelegate(parentType, valueType, valueName, caseSensetive);
-
+            {             
                 if (del != null)
                 {
                     item = del(getGenericArgs(valueType));

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using FakerLib;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NUnit.Framework;
@@ -62,6 +63,16 @@ namespace UnitTest
         {
             public List<int> TestList;
             public int[] TestArray;
+        }
+
+        public class TestOpenClass4
+        {
+            public List<TestOpenClass> TestClassList;
+        }
+
+        public class TestOpenClass5
+        {
+            public TestOpenClass2 TestObject;
         }
 
         public object CustomIntGenerator(Type[] genericTypes)
@@ -145,11 +156,12 @@ namespace UnitTest
             config.Add<TestOpenClass2, Int32>(CustomIntGenerator, obj => obj.TestCustomInt);
             Faker faker = new Faker(config);
 
-            TestOpenClass2 testClass = (TestOpenClass2)faker.Create(typeof(TestOpenClass2));
-
+            TestOpenClass2 testClass = (TestOpenClass2)faker.Create(typeof(TestOpenClass2));            
             Assert.AreNotEqual(testClass.TestInt, -1);
             Assert.AreEqual(testClass.TestCustomInt, -1);
 
+            TestOpenClass5 testClass2 = (TestOpenClass5)faker.Create(typeof(TestOpenClass5));
+            Assert.AreEqual(-1, testClass2.TestObject.TestCustomInt);
         }
 
         [TestMethod]
@@ -177,6 +189,16 @@ namespace UnitTest
 
             Assert.AreNotEqual(testClass.TestList.First(), 0);
             Assert.AreNotEqual(testClass.TestArray[0], 0);
+        }
+
+        [TestMethod]
+        public void TestClassInCollection()
+        {
+            TestOpenClass4 testClass = FillClass<TestOpenClass4>();
+
+            Assert.NotNull(testClass.TestClassList);
+            Assert.That(testClass.TestClassList.Count, Is.GreaterThanOrEqualTo(2));
+            Assert.NotNull(testClass.TestClassList[0].TestString);
         }
     }
 }
