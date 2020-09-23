@@ -11,7 +11,6 @@ namespace FakerLib
     public class FakerConfig
     {
         private Dictionary<Type, List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>>> configExpressionDelegate;
-
         private static PluginController pluginController;
         private static List<IFakerClass> plugins;
 
@@ -31,16 +30,13 @@ namespace FakerLib
         public Func<Type[], object> GetExpressionDelegate(Type ParentType, Type ChildType, string ChildName, bool caseSensetive = true)
         {
             List<Tuple<Type, string, Func<Type[], object>, Func<Type, bool>>> childDictionary;
-            Func<Type[], object> del = null;
+            Func<Type[], object> del;
 
-            if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary) && searchForDelegate(ChildType, childDictionary, ChildName, out del, caseSensetive)){}
-            else
+            if (!(configExpressionDelegate.TryGetValue(ParentType, out childDictionary) && searchForDelegate(ChildType, childDictionary, ChildName, out del, caseSensetive)))
             {
-                if (configExpressionDelegate.TryGetValue(ParentType, out childDictionary) && searchForDelegate(ChildType, childDictionary, null, out del, caseSensetive)){}
-                else
+                if (!(configExpressionDelegate.TryGetValue(ParentType, out childDictionary) && searchForDelegate(ChildType, childDictionary, null, out del, caseSensetive)))
                 {
-                    if (configExpressionDelegate.TryGetValue(typeof(object), out childDictionary) && searchForDelegate(ChildType, childDictionary, null, out del, caseSensetive)) {}
-                    else
+                    if (!(configExpressionDelegate.TryGetValue(typeof(object), out childDictionary) && searchForDelegate(ChildType, childDictionary, null, out del, caseSensetive)))
                     {
                         del = null; 
                     }
@@ -55,7 +51,7 @@ namespace FakerLib
             {
                 if (plugin.GetType().GetInterfaces().Contains(typeof(IFakerClass)))
                 {
-                    ((IFakerClass)plugin).SetDataBridge(new PluginDataBridge(fakerInstance));
+                    plugin.SetDataBridge(new PluginDataBridge(fakerInstance));
                 }
             }
         }
@@ -68,7 +64,7 @@ namespace FakerLib
                 string name1 = caseSensetive ? delData.Item2 : delData.Item2 != null ? delData.Item2.ToLower() : null;
                 string name2 = caseSensetive ? ChildName : ChildName != null ? ChildName.ToLower() : null;
 
-                if ((delData.Item4 == null ? (delData.Item1.Name == ChildType.Name) : delData.Item4.Invoke(ChildType)) && (name1 == name2))
+                if ((delData.Item4 == null ? (delData.Item1.FullName == ChildType.FullName) : delData.Item4.Invoke(ChildType)) && (name1 == name2))
                 {
                     del = delData.Item3;
                     return true;

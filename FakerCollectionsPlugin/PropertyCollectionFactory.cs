@@ -23,6 +23,8 @@ namespace FakerCollection
         {
             customTypeComparator = new Dictionary<string, Func<Type, bool>>();
             customTypeComparator.Add("GenerateArray", type => type.IsArray);
+            customTypeComparator.Add("GenerateList", type => type.Name == typeof(List<>).Name);
+
         }
 
         public void SetDataBridge(IFakerDataBridge dataBridge)
