@@ -58,7 +58,6 @@ namespace FakerLib
             PropertyInfo[] properties = item.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
             FieldInfo[] fields = item.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
 
-            Random rand = new Random();
 
             foreach (PropertyInfo propertyInfo in properties)
             {
